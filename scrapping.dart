@@ -17,18 +17,18 @@ final logFlags = {
   'itemPageDetail': false,
 };
 
-var noCreate = false;
+var noUpdate = false;
 
 void main(List<String> argStrs) async {
   // read args
   var argParser = ArgParser();
   // argParser.addOption('mode');
   // argParser.addFlag('verbose', defaultsTo: true);
-  argParser.addFlag('nocreate', defaultsTo: false);
+  argParser.addFlag('noupdate', defaultsTo: false);
   var args = argParser.parse(argStrs);
   // print(args['mode']);
   // print(args['verbose']);
-  noCreate = args['nocreate'];
+  noUpdate = args['noupdate'];
 
   // read env
   var env = DotEnv(includePlatformEnvironment: true)..load();
@@ -50,7 +50,6 @@ void main(List<String> argStrs) async {
   await eachLimit(itemUrls, 10, (String? itemUrl) async {
   // var element = document.querySelector('td.ctlsets-left');
     if (itemUrl == null) return;
-    print(itemUrl);
     await scrapeItemPage(itemUrl);
   });
 }
@@ -79,11 +78,6 @@ Future<void> scrapeItemPage(String itemUrl) async {
     print('invalid item url $itemUrl');
     return;
   }
-  if (!importedItem.add(itemKey)) return;
-  final uri = Uri.https('www.brickeconomy.com', itemUrl);
-  final response = await http.get(uri);
-  final document = parser.parse(response.body);
-  final divs = document.getElementsByTagName('div');
 
   // find or create parse object
   var query = QueryBuilder<ParseObject>(ParseObject(CollectionName));
@@ -94,11 +88,19 @@ Future<void> scrapeItemPage(String itemUrl) async {
     // create new object
     if (logFlags['itemPageDetail']!) print('create new object');
     parseObj = ParseObject(CollectionName)..set('key', itemKey);
-  } else if (noCreate) {
+  } else if (noUpdate) {
+    print('skip item page $itemKey');
+    return;
   } else {
     print('update item page $itemKey');
     if (logFlags['itemPageDetail']!) print('get old object ${parseObj.objectId}');
   }
+  
+  if (!importedItem.add(itemKey)) return;
+  final uri = Uri.https('www.brickeconomy.com', itemUrl);
+  final response = await http.get(uri);
+  final document = parser.parse(response.body);
+  final divs = document.getElementsByTagName('div');
 
   Element? tarEle;
   String value;
