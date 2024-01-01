@@ -1,0 +1,16 @@
+{
+  "name": "scrapping",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "parse-server": "env-cmd parse-server",
+    "parse-dashboard": "parse-dashboard --dev --config parse-dashboard-config.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "env-cmd": "^10.1.0"
+  }
+}
