@@ -44,8 +44,8 @@ void main(List<String> argStrs) async {
 
   // await test();
   
-  // final itemUrls = await scrapeRetiringSoon();
-  final itemUrls = [ "/set/30635-1/lego-friends-cleanup" ];
+  final itemUrls = await scrapeRetiringSoon();
+  // final itemUrls = [ "/set/30635-1/lego-friends-cleanup" ];
 
   await eachLimit(itemUrls, 10, (String? itemUrl) async {
   // var element = document.querySelector('td.ctlsets-left');
@@ -147,8 +147,8 @@ Future<void> scrapeItemPage(String itemUrl) async {
   } catch (e) {
     dateValue = DateFormat.yMMMM('en_US').parse(value);
   }
-  if (logFlags['itemPageDetail']!) print('year $value $dateValue');
-  parseObj.set('year', dateValue);
+  if (logFlags['itemPageDetail']!) print('released $value $dateValue');
+  parseObj.set('released', dateValue);
   
   // Availability
   tarEle = divs.firstWhereOrNull((element) => element.innerHtml == 'Availability');
