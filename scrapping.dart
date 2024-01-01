@@ -1,8 +1,9 @@
 import 'dart:collection';
-import 'dart:ffi';
 
 import 'package:collection/collection.dart';
 
+import 'package:args/args.dart';
+import 'package:dotenv/dotenv.dart';
 import 'package:parse_server_sdk/parse_server_sdk.dart';
 import 'package:http/http.dart' as http;
 import 'package:html/parser.dart' as parser;
@@ -16,10 +17,29 @@ final logFlags = {
   'itemPageDetail': false,
 };
 
-void main() async {
+var noCreate = false;
+
+void main(List<String> argStrs) async {
+  // read args
+  var argParser = ArgParser();
+  // argParser.addOption('mode');
+  // argParser.addFlag('verbose', defaultsTo: true);
+  argParser.addFlag('nocreate', defaultsTo: false);
+  var args = argParser.parse(argStrs);
+  // print(args['mode']);
+  // print(args['verbose']);
+  noCreate = args['nocreate'];
+
+  // read env
+  var env = DotEnv(includePlatformEnvironment: true)..load();
+
+  var appId = env['PARSE_SERVER_APPLICATION_ID']!;
+  if (appId == "") appId = 'appId';
+  var parseServerUrl = env['PARSE_SERVER_URL']!;
+  if (parseServerUrl == "") parseServerUrl = 'http://localhost:1337/parse';
   await Parse().initialize(
-    "APPLICATION_ID",
-    "http://localhost:1337/parse",
+    appId,
+    parseServerUrl,
   );
 
   // await test();
@@ -60,7 +80,6 @@ Future<void> scrapeItemPage(String itemUrl) async {
     return;
   }
   if (!importedItem.add(itemKey)) return;
-  print('add item page $itemKey');
   final uri = Uri.https('www.brickeconomy.com', itemUrl);
   final response = await http.get(uri);
   final document = parser.parse(response.body);
@@ -71,10 +90,13 @@ Future<void> scrapeItemPage(String itemUrl) async {
   query.whereEqualTo('key', itemKey);
   var parseObj = await query.first();
   if (parseObj == null) {
+    print('add item page $itemKey');
     // create new object
     if (logFlags['itemPageDetail']!) print('create new object');
     parseObj = ParseObject(CollectionName)..set('key', itemKey);
+  } else if (noCreate) {
   } else {
+    print('update item page $itemKey');
     if (logFlags['itemPageDetail']!) print('get old object ${parseObj.objectId}');
   }
 
