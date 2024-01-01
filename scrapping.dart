@@ -12,6 +12,8 @@ import 'package:intl/intl.dart';
 
 import './async.dart';
 
+final beDomain = 'www.brickeconomy.com';
+
 final importedItem = HashSet<String>();
 final logFlags = {
   'itemPageDetail': false,
@@ -44,22 +46,36 @@ void main(List<String> argStrs) async {
 
   // await test();
   
-  final itemUrls = await scrapeRetiringSoon();
-  // final itemUrls = [ "/set/30635-1/lego-friends-cleanup" ];
+  // final itemUrls = await scrapeRetiringSoon();
+  // final itemUrls = [ "/set/40626-1/" ];
+  final itemUrls = await scrapeThemePage('brickheadz');
+
+  // print(itemUrls);
 
   await eachLimit(itemUrls, 10, (String? itemUrl) async {
-  // var element = document.querySelector('td.ctlsets-left');
     if (itemUrl == null) return;
     await scrapeItemPage(itemUrl);
   });
+
+  print('done');
 }
 
 Future<Iterable<String?>> scrapeRetiringSoon() async {
-  final uri = Uri.https('www.brickeconomy.com', '/sets/retiring-soon');
-  var response = await http.get(uri);
-  var document = parser.parse(response.body);
-  // get main list
+  final uri = Uri.https(beDomain, '/sets/retiring-soon');
+  final response = await http.get(uri);
+  final document = parser.parse(response.body);
+  // note: default sorting is year - desc
 
+  // get main list
+  final itemUrls = document.querySelectorAll('td.ctlsets-left').map((element) => element.querySelector('a')?.attributes['href']);
+  return itemUrls;
+}
+
+Future<Iterable<String?>> scrapeThemePage(String themeId) async {
+  final uri = Uri.https(beDomain, '/sets/theme/$themeId');
+  final response = await http.get(uri);
+  final document = parser.parse(response.body);
+  // get main list
   final itemUrls = document.querySelectorAll('td.ctlsets-left').map((element) => element.querySelector('a')?.attributes['href']);
   return itemUrls;
 }
